@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>简历自动填充</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <!-- 顶部工具栏 -->
+  <div class="toolbar">
+    <button id="modeToggle" class="btn-mode">🔒 填充</button>
+    <button id="resetBtn" class="btn-reset" title="恢复默认数据">🔄</button>
+  </div>
+
+  <!-- 焦点状态提示 -->
+  <div id="focusHint" class="focus-hint">
+    👆 请先在网页上点击要填入的输入框
+  </div>
+
+  <!-- 填充反馈 -->
+  <div id="toast" class="toast"></div>
+
+  <!-- 分类列表 -->
+  <div id="categories" class="categories"></div>
+
+  <script src="data.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
