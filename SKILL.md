@@ -1,5 +1,6 @@
 ---
 name: auto-fill-extension
+slug: auto-fill-extension
 description: 安装并初始化「简历自动填充助手」Chrome 插件——克隆代码、读取用户简历文件、自动填充 data.js、引导加载扩展。用户只需提供简历文件路径，其余全自动完成。
 ---
 
