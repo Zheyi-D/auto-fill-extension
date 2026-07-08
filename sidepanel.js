@@ -58,12 +58,46 @@
     const header = document.createElement('div');
     header.className = 'category-header';
 
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'cat-icon';
+    iconSpan.textContent = cat.icon;
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'cat-name';
+    nameSpan.textContent = cat.name;
+
     const titleSpan = document.createElement('span');
     titleSpan.className = 'category-title';
-    titleSpan.innerHTML = '<span class="cat-icon">' + cat.icon + '</span>' + escapeHtml(cat.name);
-    titleSpan.addEventListener('click', function () {
-      panel.classList.toggle('collapsed');
-    });
+    titleSpan.appendChild(iconSpan);
+    titleSpan.appendChild(nameSpan);
+
+    // 编辑模式：点击名称和图标可编辑；填充模式：点击折叠
+    if (isEditMode) {
+      iconSpan.style.cursor = 'pointer';
+      iconSpan.title = '点击修改图标（emoji）';
+      iconSpan.addEventListener('click', function (e) {
+        e.stopPropagation();
+        startCategoryIconEdit(iconSpan, cat, catIdx);
+      });
+
+      nameSpan.style.cursor = 'text';
+      nameSpan.title = '点击修改分类名称';
+      nameSpan.addEventListener('click', function (e) {
+        e.stopPropagation();
+        startCategoryNameEdit(nameSpan, cat, catIdx);
+      });
+
+      // 编辑模式下只有点击空白区域才折叠
+      titleSpan.addEventListener('click', function (e) {
+        if (e.target === titleSpan) {
+          panel.classList.toggle('collapsed');
+        }
+      });
+    } else {
+      titleSpan.addEventListener('click', function () {
+        panel.classList.toggle('collapsed');
+      });
+    }
 
     const headerActions = document.createElement('div');
     headerActions.className = 'header-actions';
@@ -99,10 +133,64 @@
     fieldList.className = 'field-list';
     fieldList.dataset.mode = isEditMode ? 'edit' : 'fill';
 
-    cat.fields.forEach(function (field, fieldIdx) {
-      const row = createFieldRow(cat, catIdx, field, fieldIdx);
-      fieldList.appendChild(row);
+    // 把字段按数字前缀分组，每组一段经历
+    var groups = [];
+    var currentGroup = null;
+    cat.fields.forEach(function (field) {
+      var gid = getGroupNumber(field.label);
+      if (gid === 0) gid = -1; // 无数字的字段放一组
+      if (!currentGroup || currentGroup.id !== gid) {
+        currentGroup = { id: gid, fields: [], label: null };
+        groups.push(currentGroup);
+      }
+      // 每个分组的第一条（通常是公司名或项目名）作为组标题
+      if (!currentGroup.label && gid > 0) {
+        currentGroup.label = field.value;
+      }
+      currentGroup.fields.push(field);
     });
+
+    // 如果是单组（全部无数字），不包装直接渲染
+    if (groups.length <= 1) {
+      cat.fields.forEach(function (field, fieldIdx) {
+        fieldList.appendChild(createFieldRow(cat, catIdx, field, fieldIdx));
+      });
+    } else {
+      groups.forEach(function (grp) {
+        var card = document.createElement('div');
+        card.className = 'group-card';
+
+        if (grp.label) {
+          var cardHead = document.createElement('div');
+          cardHead.className = 'group-card-head';
+          cardHead.textContent = grp.label;
+          if (isEditMode) {
+            cardHead.title = '点击编辑分块标题';
+            cardHead.addEventListener('click', function () {
+              // 编辑该分块第一字段的值（即公司名/项目名）
+              var firstField = grp.fields[0];
+              var idx = cat.fields.indexOf(firstField);
+              // 需要重新渲染才能拿到 DOM，所以走简单路径：直接弹 prompt
+              var newVal = prompt('修改标题', grp.label);
+              if (newVal && newVal.trim() !== '') {
+                firstField.value = newVal.trim();
+                grp.label = newVal.trim();
+                cardHead.textContent = newVal.trim();
+                saveData();
+              }
+            });
+          }
+          card.appendChild(cardHead);
+        }
+
+        grp.fields.forEach(function (field, fieldIdx) {
+          var realIdx = cat.fields.indexOf(field);
+          card.appendChild(createFieldRow(cat, catIdx, field, realIdx));
+        });
+
+        fieldList.appendChild(card);
+      });
+    }
 
     panel.appendChild(fieldList);
     return panel;
@@ -248,20 +336,37 @@
 
   // ========== 内联编辑 ==========
   function startInlineEdit(el, field, key, catIdx, fieldIdx) {
-    if (el.querySelector('input')) return; // 已经在编辑中
+    // 防止重复编辑
+    if (el.querySelector('input, textarea')) return;
 
-    const originalText = field[key];
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'inline-editor';
-    input.value = originalText;
+    var originalText = field[key];
+    var isMultiline = (key === 'value');
+    var editor;
+
+    if (isMultiline) {
+      // 多行文本 → 使用 textarea，Enter 换行，Ctrl+Enter 保存
+      editor = document.createElement('textarea');
+      editor.className = 'inline-editor inline-textarea';
+      editor.rows = 2;
+    } else {
+      // 单行文本 → 使用 input，Enter 保存
+      editor = document.createElement('input');
+      editor.type = 'text';
+      editor.className = 'inline-editor';
+    }
+
+    editor.value = originalText;
     el.textContent = '';
-    el.appendChild(input);
-    input.focus();
-    input.select();
+    el.appendChild(editor);
+    editor.focus();
+    editor.select();
 
     function save() {
-      const newVal = input.value.trim();
+      var newVal = editor.value;
+      // 多行字段保留首尾空白行，不 trim
+      if (!isMultiline) {
+        newVal = newVal.trim();
+      }
       if (newVal && newVal !== originalText) {
         field[key] = newVal;
         saveData();
@@ -271,15 +376,94 @@
       }
     }
 
+    editor.addEventListener('blur', save);
+    editor.addEventListener('keydown', function (e) {
+      if (isMultiline) {
+        // textarea: Ctrl+Enter 保存，Escape 取消，Enter 自然换行
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          editor.blur();
+        }
+        if (e.key === 'Escape') {
+          editor.value = originalText;
+          editor.blur();
+        }
+      } else {
+        // input: Enter 保存，Escape 取消
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          editor.blur();
+        }
+        if (e.key === 'Escape') {
+          editor.value = originalText;
+          editor.blur();
+        }
+      }
+    });
+  }
+
+  // 内联编辑分类名称
+  function startCategoryNameEdit(el, cat, catIdx) {
+    if (el.querySelector('input')) return;
+
+    const original = cat.name;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'inline-editor cat-name-editor';
+    input.value = original;
+    el.textContent = '';
+    el.appendChild(input);
+    input.focus();
+    input.select();
+
+    function save() {
+      const newVal = input.value.trim();
+      if (newVal && newVal !== original) {
+        cat.name = newVal;
+        saveData();
+        el.textContent = newVal;
+      } else {
+        el.textContent = original;
+      }
+    }
+
     input.addEventListener('blur', save);
     input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        input.blur();
+      if (e.key === 'Enter') input.blur();
+      if (e.key === 'Escape') { input.value = original; input.blur(); }
+    });
+  }
+
+  // 内联编辑分类图标（emoji）
+  function startCategoryIconEdit(el, cat, catIdx) {
+    if (el.querySelector('input')) return;
+
+    const original = cat.icon;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'inline-editor cat-icon-editor';
+    input.value = original;
+    input.maxLength = 2;
+    el.textContent = '';
+    el.appendChild(input);
+    input.focus();
+    input.select();
+
+    function save() {
+      const newVal = input.value.trim() || original;
+      if (newVal !== original) {
+        cat.icon = newVal;
+        saveData();
+        el.textContent = newVal;
+      } else {
+        el.textContent = original;
       }
-      if (e.key === 'Escape') {
-        input.value = originalText;
-        input.blur();
-      }
+    }
+
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') input.blur();
+      if (e.key === 'Escape') { input.value = original; input.blur(); }
     });
   }
 
@@ -381,8 +565,20 @@
         focusHint.className = 'focus-hint';
       }
     } catch (e) {
-      focusHint.innerHTML = '🔒 请刷新页面后重试';
-      focusHint.className = 'focus-hint error';
+      // content script 可能未注入（新加载的页面、chrome:// 页面等），尝试重新注入
+      if (activeTabId) {
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId: activeTabId },
+            files: ['content.js'],
+          });
+          focusHint.innerHTML = '👆 请先在网页上点击要填入的输入框';
+          focusHint.className = 'focus-hint';
+        } catch (e2) {
+          focusHint.innerHTML = '🔒 当前页面不支持（chrome:// 或系统页面）';
+          focusHint.className = 'focus-hint error';
+        }
+      }
     }
   }
 
@@ -439,6 +635,11 @@
   }
 
   // ========== 工具函数 ==========
+  // 从字段标签中提取分组数字：公司1→1, 描述2-1→2, 项目3名称→3, 语言→0
+  function getGroupNumber(label) {
+    var m = label.match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : 0;
+  }
   function escapeHtml(text) {
     var div = document.createElement('div');
     div.textContent = text;

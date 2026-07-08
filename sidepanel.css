@@ -192,9 +192,44 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: 1;
+  min-width: 0;
 }
 
 .cat-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+  padding: 2px 3px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.cat-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 3px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+/* 编辑模式下悬停提示可编辑 */
+.category-header .cat-icon:hover,
+.category-header .cat-name:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+/* 分类名称/图标编辑输入框 */
+.cat-name-editor {
+  min-width: 80px;
+}
+
+.cat-icon-editor {
+  width: 32px;
+  text-align: center;
   font-size: 15px;
 }
 
@@ -219,6 +254,53 @@ body {
   font-size: 10px;
   color: var(--text-secondary);
   margin-left: 4px;
+}
+
+/* ====== 分组卡片 ====== */
+.group-card {
+  margin: 8px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: box-shadow 0.15s;
+}
+
+.group-card:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.group-card-head {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), #7c3aed);
+  letter-spacing: 0.3px;
+}
+
+.group-card .field-row {
+  border-bottom: 1px solid var(--border);
+}
+
+.group-card .field-row:last-child {
+  border-bottom: none;
+}
+
+/* 卡片内字段行微调 */
+.group-card .field-row.fill-mode:hover {
+  background: var(--primary-light);
+}
+
+/* 暗色下卡片头部微调 */
+@media (prefers-color-scheme: dark) {
+  .group-card-head {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  }
+  .group-card {
+    border-color: var(--border);
+  }
 }
 
 /* ====== 字段列表 ====== */
@@ -379,6 +461,35 @@ body {
   box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
 }
 
+/* textarea 版编辑器 — 支持多行换行 */
+.inline-textarea {
+  resize: vertical;
+  min-height: 36px;
+  max-height: 200px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 填充模式下多行内容显示 2 行截断 */
+.field-row.fill-mode .field-value {
+  max-width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* 编辑模式下值完整换行展示 */
+.field-row.edit-mode .field-value {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
 /* ====== 按钮组件 ====== */
 .btn-icon {
   width: 22px;
@@ -440,6 +551,17 @@ body {
 .btn-add-cat:hover {
   background: var(--primary-light);
   border-color: var(--primary);
+}
+
+/* ====== 底部联系信息 ====== */
+.footer {
+  margin: 12px 8px 8px;
+  padding: 8px 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  border-top: 1px solid var(--border);
 }
 
 /* ====== 滚动条 ====== */

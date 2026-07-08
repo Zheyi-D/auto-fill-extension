@@ -1,63 +1,91 @@
-# resume-init — AI 助手自动初始化简历数据
+# 🪄 一句话安装 + 初始化
 
-把这个提示词发给你的 AI 助手，它会自动读取你的简历文件并填入插件。
+把这个提示词发给你的 AI 助手（Claude Code / Cursor / ChatGPT / Codex 等），全自动完成。
 
 ---
 
 ## 提示词（复制下面整段）
 
 ```
-请帮我初始化「简历自动填充 Chrome 扩展」的 data.js。
+请帮我安装并初始化「简历自动填充」Chrome 插件。
 
-我的简历文件路径：[替换为你的简历路径，如 ~/Desktop/我的简历.pdf]
+我的简历文件路径：[替换为你的路径，如 ~/Desktop/我的简历.pdf]
 
 ## 你要做的事：
 
-1. **读取我的简历文件** — 用工具读取上面的路径（支持 .docx / .pdf / .txt）
+### 第一步：获取插件代码
+git clone https://github.com/Zheyi-D/auto-fill-extension.git
+没有 git 的话直接下载 ZIP 也行，放到一个方便找的目录。
 
-2. **提取以下信息**（尽可能完整）：
-   - 基本信息：姓名、英文名、邮箱、电话、所在地
-   - 教育背景：硕士/本科学校全称、学位、专业、GPA、荣誉、时间
-   - 实习经历：每段经历的公司全称、职位、时间、核心工作描述（2-3条）
-   - 项目经历：每个项目的名称、描述、成果
-   - 校园经历/竞赛/论文等（可选）
-   - 技能：语言能力、工具、技术栈
+### 第二步：读取我的简历
+用工具读取上面提供的简历文件（支持 .docx / .pdf / .txt）。
+提取结构和关键字眼以自然语言描述即可，不要求 OCR 准确度。
 
-3. **修改 data.js 文件** — 文件在项目根目录 `data.js`
-   - 把 DEFAULT_DATA 里每个 category 的 fields 替换为我的真实信息
-   - 保持完全相同的 JSON 结构：`{ label: "字段名", value: "内容" }`
-   - 每段实习经历拆分为多条描述（公司X / 职位X / 时间X / 描述X-1 / 描述X-2）
-   - 如果我有更多信息（如校园经历），可以添加新的 category
-   - 如果某个 category 我用不上（如我没有校园经历），删除该 category
+### 第三步：填充 data.js
+把提取到的信息写入 clone 下来的目录中的 data.js 文件，
+替换 DEFAULT_DATA 里的示例数据字段。要求：
+- 保持完全相同的 JSON 结构：{ "label": "字段名", "value": "内容" }
+- 每段实习经历拆分为多条（公司X / 职位X / 时间X / 描述X-1 / 描述X-2）
+- 可以根据我的实际经历增删 category 和 field
+- 不要改动任何其他文件
 
-4. **完成后告诉我**：
-   - 你提取了哪些信息
-   - 新增/删除了哪些分类
-   - 我需要做什么——在 Chrome 扩展页点「重新加载」即可
+### 第四步：告诉我
+你提取了什么、添加/删除了哪些分类，以及最后一步：
+- 打开 chrome://extensions/
+- 开启右上角「开发者模式」
+- 点「加载已解压的扩展程序」，选择刚才 clone 的文件夹
+- 大功告成 🎉
 ```
 
 ---
 
-## 使用示例
+## 工作原理
 
-### Claude Code / Cursor / Terminal
 ```
-我的简历文件路径：C:\Users\DDDZZZYYY\Desktop\简历.pdf
+你给 AI 一句话 → AI 克隆仓库 → AI 读你的简历 → AI 写入 data.js → 你加载扩展 → 开始填表
 ```
 
-### ChatGPT / 网页版 AI
-把简历文件拖入聊天框，加上提示词。
+全程你只需要：
+1. 复制上面的提示词（改一下简历路径）
+2. 粘贴发给 AI
+3. 最后在 Chrome 里点两下
 
 ---
 
-## 高级用法：绑定为 Claude Code Skill
+## 支持的简历格式
 
-如果你用 Claude Code，可以把上面的提示词保存为 skill，以后一句命令就行：
+| 格式 | 支持 |
+|------|------|
+| `.docx` Word 文档 | ✅ |
+| `.pdf` PDF 文件 | ✅ |
+| `.txt` 纯文本 | ✅ |
+| 飞书文档 URL | ✅（部分 AI 支持） |
+| 金山文档 URL | ✅（部分 AI 支持） |
+| 直接粘贴简历文字 | ✅ |
 
-1. 告诉 Claude Code：「帮我把 resume-init.md 注册为一个 skill」
-2. 之后只需说：`/resume-init ~/Desktop/我的简历.pdf`
+---
 
-Claude Code 会自动：
-- 读取 resume-init.md 中的提示词
-- 用你给的简历路径替换占位符
-- 执行全套初始化流程
+## 支持的 AI 助手
+
+| AI 助手 | 状态 |
+|------|------|
+| Claude Code | ✅ 原生支持（也可用 `resume-init.skill.md` 注册 skill） |
+| Codex (OpenClaw) | ✅ 支持 |
+| ChatGPT / GPT-4 | ✅ 拖入简历文件 + 粘贴提示词 |
+| Cursor | ✅ 在终端执行 |
+| Gemini | ✅ 支持 |
+| 任何能读写文件的 AI | ✅ |
+
+---
+
+## 示例
+
+```bash
+# Claude Code 里只需说：
+我的简历在 ~/Desktop/简历.pdf，请按 resume-init.md 初始化 auto-fill-extension
+```
+
+```bash
+# 注册为 skill 后更短：
+/resume-init ~/Desktop/简历.pdf
+```

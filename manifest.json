@@ -3,7 +3,7 @@
   "name": "简历自动填充助手",
   "version": "1.0.0",
   "description": "一键填充简历信息到网页表单，支持编辑管理和分类组织",
-  "author": "邓哲毅",
+  "author": "Resume Auto Fill Contributors",
 
   "icons": {
     "16": "icons/icon16.png",
@@ -14,7 +14,8 @@
   "permissions": [
     "sidePanel",
     "storage",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
 
   "host_permissions": [
