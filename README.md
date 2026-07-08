@@ -156,7 +156,7 @@ A: 在 GitHub 提 Issue 即可。
 
 ## 📧 联系方式
 
-问题反馈 / 功能建议：请在 [GitHub Issue](https://github.com/Zheyi-D/auto-fill-extension/issues/new) 提交
+问题反馈 / 功能建议：**dddzzzyyy@agent.qq.com** ｜ [GitHub Issue](https://github.com/Zheyi-D/auto-fill-extension/issues/new)
 
 ---
 
