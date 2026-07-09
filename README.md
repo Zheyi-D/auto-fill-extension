@@ -2,6 +2,7 @@
 
 一键填充简历信息到招聘网站表单的 Chrome 浏览器插件。
 📋 [版本更新日志](https://github.com/Zheyi-D/auto-fill-extension/releases)
+
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![Manifest](https://img.shields.io/badge/manifest-v3-green)
 ![License](https://img.shields.io/badge/license-MIT-orange)
